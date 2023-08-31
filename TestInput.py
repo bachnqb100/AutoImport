@@ -1,17 +1,25 @@
-import keyboard
-import pyautogui
+import tkinter as tk
 
-# Define the hotkey combination (you can customize this)
-HOTKEY = "f7"
+def button1_clicked():
+    label.config(text="Button 1 Clicked")
 
-def get_mouse_position():
-    x, y = pyautogui.position()
-    print(f"Mouse Position: x={x}, y={y}")
+def button2_clicked():
+    label.config(text="Button 2 Clicked")
 
-# Register the hotkey
-keyboard.add_hotkey(HOTKEY, get_mouse_position)
+# Create the main window
+root = tk.Tk()
+root.title("Button App")
 
-print(f"Press {HOTKEY} to get mouse position. Press 'Ctrl+C' to exit.")
+# Create buttons
+button1 = tk.Button(root, text="Button 1", command=button1_clicked)
+button2 = tk.Button(root, text="Button 2", command=button2_clicked)
 
-# Keep the script running
-keyboard.wait("esc")
+
+
+# Arrange widgets using grid layout
+button1.grid(row=0, column=0, padx=10, pady=10)
+button2.grid(row=0, column=1, padx=10, pady=10)
+label.grid(row=1, columnspan=2)
+
+# Start the main event loop
+root.mainloop()

@@ -1,49 +1,37 @@
 import tkinter as tk
-from tkinter import ttk
 
-class MainApp:
+
+class ClickPosition:
     def __init__(self):
+        self.root = tk.Tk()
+        self.root.title("Mouse Click Icon")
 
-        self.app = tk.Tk()
-        self.app.title("Auto Import Data")
-        self.app.geometry("600x200")
+        # Set the app to full screen
+        self.root.attributes("-fullscreen", True)
 
-        # Set up custom title font using ttk.Style
-        title_font = ("Roboto", 16, "bold")
-        style = ttk.Style()
-        style.configure("Title.TLabel", font=title_font)
+        self.root.wait_visibility(self.root)
+        self.root.attributes("-alpha", 0.05)
 
-        # Set up application icon
-        icon_path = "zoro.ico"
-        self.app.iconbitmap(icon_path)
+        self.canvas = tk.Canvas(self.root, background="white")
+        self.canvas.pack(fill=tk.BOTH, expand=True)
 
-        # Set column weights to make buttons expand horizontally
-        button_font = ("Roboto", 15)
-        self.app.grid_columnconfigure(0, weight=1)
+        self.canvas.bind("<Button-1>", self.create_icon)
 
-        self.browse_button = tk.Button(self.app, text="Setup File", command=self.setup_file, bg="gray", font=button_font)
-        self.browse_button.grid(row=0, column=0, padx=10, pady=10, sticky="ew")
+    def create_icon(self, event):
+        x, y = event.x, event.y
+        icon_size = 30
+        self.canvas.create_oval(x, y, x + icon_size, y + icon_size, fill="blue")
+        self.pos = [x, y]
+        print(self.pos)
+        self.stop()
+    def run(self):
+        self.root.mainloop()
 
-        self.save_button1 = tk.Button(self.app, text="Setup Action", command=self.setup_action, bg="gray", font=button_font)
-        self.save_button1.grid(row=1, column=0, padx=10, pady=10, sticky="ew")
+    def stop(self):
+        self.root.destroy()
 
-        self.save_button2 = tk.Button(self.app, text="Start Import", command=self.start_import, bg="green", font=button_font)
-        self.save_button2.grid(row=2, column=0, padx=10, pady=10, sticky="ew")
+if __name__ == "__main__":
 
-    def setup_file(self):
-        # Define the behavior of the "Setup File" button.
-        pass
-
-    def setup_action(self):
-        # Define the behavior of the "Setup Action" button(s).
-        pass
-
-    def start_import(self):
-        # Define the behavior of the "Setup Action" button(s).
-        pass
-
-# Create an instance of the MainApp class
-app = MainApp()
-
-# Start the tkinter main loop
-app.app.mainloop()
+    #main
+    app = ClickPosition()
+    app.run()
