@@ -4,10 +4,38 @@ from tkinter import filedialog
 import time
 import pyautogui
 import keyboard
+import os
+
 
 QUIT_KEY = "esc"
 
 
+def is_valid_file_path(path):
+    return os.path.exists(path)
+
+
+def get_value_in_line(filename, line_number):
+    try:
+        with open(filename, 'r') as file:
+            lines = file.readlines()
+            if 1 <= line_number <= len(lines):
+                return lines[line_number - 1].strip()  # Subtract 1 to convert to zero-based indexing
+            else:
+                return "Line number out of range"
+    except FileNotFoundError:
+        return "File not found"
+    except Exception as e:
+        return str(e)
+
+def count_lines(filename):
+    try:
+        with open(filename, 'r') as file:
+            line_count = sum(1 for line in file)
+        return line_count
+    except FileNotFoundError:
+        return "File not found"
+    except Exception as e:
+        return str(e)
 class ClickPosition:
     def __init__(self, callback):
         self.root = tk.Tk()
@@ -134,30 +162,28 @@ class MainApp:
 
         # Text widget at the bottom
         self.log_text = tk.Text(text_frame, wrap="word", height=10, width=50)
-        self.log_text.pack(fill="both", expand=True)\
+        self.log_text.pack(fill="both", expand=True)
 
         # Init record actions
         self.actions = []
         self.path = " "
         self.count_voucher = 0
-
         self.has_path = False
+        self.count_voucher_has_path = 0
 
     def browse_file(self):
         file_path = filedialog.askopenfilename()
         if file_path:
             self.entry_var.set(file_path)
-            self.has_path = True
             self.log("Browse file successfully!!!")
         else:
-            self.has_path = False
-            self.log("No path input, value input is value in the text box???")
+            self.log("No path input???")
 
     def add_file(self):
         cached_path = self.entry_var.get()
         if cached_path:
             self.path = cached_path
-            self.log("Setup file successfully!!!")
+            self.log("Setup string successfully!!!")
 
     def add_click(self):
         self.log("Add click action...")
@@ -177,18 +203,21 @@ class MainApp:
     def add_position(self, x, y):
         self.actions.append(("click", x, y))
 
-    def add_string(self, value):
-        self.actions.append(("string", value))
+    def add_string(self, has_path, value):
+        self.actions.append(("string", has_path, value))
 
     def add_key(self, value):
         self.actions.append(("key", value))
 
-    def perform_actions(self):
+    def perform_actions(self, count):
         for action in self.actions:
             if action[0] == "click":
                 pyautogui.click(action[1], action[2])
             elif action[0] == "string":
-                pyautogui.write(action[1])
+                if (action[1] == False):
+                    pyautogui.write(action[2])
+                else:
+                    pyautogui.write(get_value_in_line(action[2], count+1))
             elif action[0] == "key":
                 keyboard.send(action[1])
             time.sleep(0.1)
@@ -196,24 +225,21 @@ class MainApp:
     def execute_actions(self):
         self.log("Execute actions...")
         self.app.iconify()
-        if (self.has_path):
-            with open(self.path, 'r') as file:
-                # Iterate through each line in the file
-                for line in file:
-                    # Process the line here
-                    self.log("Add voucher: " + line.strip())
-                    self.modify_string_value_in_action_string("string", line.strip())
-                    self.perform_actions()
-                    time.sleep(0.5)
+        if self.has_path:
+            for i in range(self.count_voucher_has_path):
+                self.log("Loop Count: " + i.__str__())
+                self.perform_actions(i)
+                time.sleep(0.5)
             self.log("Done input from file!!!")
         else:
             count_input = int(self.count_entry_var.get())
             for i in range(count_input):
-                self.log("Add voucher: " + self.path.__str__())
-                self.perform_actions()
+                self.log("Loop Count: " + i.__str__())
+                self.perform_actions(i)
                 time.sleep(0.5)
             self.log("Done input " + count_input.__str__() + " times from input text box!!!")
         self.app.deiconify()
+
     def modify_string_value_in_action_string(self, action_type, *args):
         for index, action in enumerate(self.actions):
             if action[0] == action_type:
@@ -222,36 +248,49 @@ class MainApp:
 
     def clear_actions(self):
         self.actions = []
+        self.count_voucher_has_path = 0
         self.log("Clear all action...")
         self.list_box.delete(0, tk.END)
+        self.has_path = False
 
     def add_input(self):
-        self.count_voucher = 0
-        if (self.has_path):
-            self.add_file()
-            self.add_string("test")
+        self.add_file()
+        if (is_valid_file_path(self.path)):
+            self.has_path = True
+            self.count_voucher_has_path = count_lines(self.path)
+            self.add_string(True, self.path)
             self.insert_message("Add string input into textbox from file!!!")
-            self.log("Count voucher:...")
-            with open(self.path, 'r') as file:
-                # Iterate through each line in the file
-                for line in file:
-                    # Process the line here
-                    self.count_voucher = self.count_voucher + 1
-                    self.log(line.strip())
-            self.log("Total voucher: " + self.count_voucher.__str__())
+            self.log("Total voucher: " + self.count_voucher_has_path.__str__())
         else:
-            cached_path = self.entry_var.get()
-            self.path = cached_path
+            self.add_string(False, self.path)
             self.log("No input path???")
-            self.add_string(self.path)
             self.insert_message("Add string input into textbox: " + self.path.__str__())
             self.log("If continuing, the value in textbox will fill!!!")
+
+        # if (self.has_path):
+        #     self.add_file()
+        #     self.add_string("test")
+        #     self.insert_message("Add string input into textbox from file!!!")
+        #     self.log("Count voucher:...")
+        #     with open(self.path, 'r') as file:
+        #         # Iterate through each line in the file
+        #         for line in file:
+        #             # Process the line here
+        #             self.count_voucher = self.count_voucher + 1
+        #             self.log(line.strip())
+        #     self.log("Total voucher: " + self.count_voucher.__str__())
+        # else:
+        #     cached_path = self.entry_var.get()
+        #     self.path = cached_path
+        #     self.log("No input path???")
+        #     self.add_string(self.path)
+        #     self.insert_message("Add string input into textbox: " + self.path.__str__())
+        #     self.log("If continuing, the value in textbox will fill!!!")
 
     def add_key_input(self):
         self.add_key(self.entry_key_var.get())
         self.insert_message("Press key: " + self.entry_key_var.get())
-        self.log("Add key input: " +self.entry_key_var.get())
-
+        self.log("Add key input: " + self.entry_key_var.get())
 
     def log_message(self, message):
         print(message)
