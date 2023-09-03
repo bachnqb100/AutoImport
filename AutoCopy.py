@@ -68,16 +68,20 @@ class ClickPosition:
         self.root.destroy()
 
 class ActionRecorder:
-    def __init__(self):
+    def __init__(self, callbackLog):
         self.actions = []
+        self.callbackLog = callbackLog
 
     def record_click(self, x, y):
         self.actions.append(("click", x, y))
+        self.callbackLog(("click", x, y))
 
     def record_key(self, key):
         self.actions.append(("key", key))
+        self.callbackLog(("key", key))
 
     def perform_actions(self):
+        self.callbackLog("Start action...")
         for action in self.actions:
             if action[0] == "click":
                 pyautogui.click(action[1], action[2])
@@ -92,7 +96,7 @@ class ActionRecorder:
                     self.actions[index] = (action_type,) + args
 
 class AddAction:
-    def __init__(self):
+    def __init__(self, addPosition, addPrintValue):
         self.root = tk.Tk()
         self.root.title("Add Action")
         self.root.geometry("300x150")
@@ -110,9 +114,13 @@ class AddAction:
 
         self.position = 0
 
+        self.addPosition = addPosition
+        self.addPrintValue = addPrintValue
+
 
     def button1_clicked(self):
         self.label.config(text="Add click action")
+        self.root.iconify()
         click_action = ClickPosition(self.update_position)
         click_action.run()
         click_action.stop()
@@ -120,10 +128,13 @@ class AddAction:
 
     def update_position(self, pos):
         self.position = pos
+        self.root.deiconify()
+        self.addPosition(pos[0], pos[1])
         self.label.config(text="Add click at position: " + self.position.__str__())
 
     def button2_clicked(self):
         self.label.config(text="Add input action")
+        self.addPrintValue()
 
     def run(self):
         self.root.mainloop()
@@ -167,6 +178,13 @@ class MainApp:
         self.log_text = tk.Text(self.app, wrap="word", height=10, width=50)  # Set the height and width
         self.log_text.grid(row=4, column=0, columnspan=2, padx=10, pady=10, sticky="ew")
 
+        #self.app.grid_columnconfigure(1, weight=1)
+
+        self.app.list_box = tk.Listbox(self.app)
+        self.app.list_box.grid(row=0)
+
+        self.actions = []
+
     def log(self, message):
         self.log_text.insert(tk.END, message + "\n")
         self.log_text.see(tk.END)
@@ -176,7 +194,6 @@ class MainApp:
         if file_path:
             self.entry_var.set(file_path)
             self.log("Browse file successfully!!!")
-            self.log("Click \"Setup File\"...")
 
     def setup_file(self):
         cached_path = self.entry_var.get()
@@ -185,12 +202,51 @@ class MainApp:
             self.log("Setup file successfully!!!")
 
     def setup_action(self):
-        add_action = AddAction()
+        add_action = AddAction(self.actions.record_click, self.actions.record_key)
         add_action.run()
 
     def start_import(self):
         # Define the behavior of the "Setup Action" button(s).
         pass
+
+    def logMessage(self, message):
+        print(message)
+        self.log(message)
+
+    #add action click
+    def button1_clicked(self):
+        self.app.iconify()
+        click_action = ClickPosition(self.update_position)
+        click_action.run()
+        click_action.stop()
+
+
+    def update_position(self, pos):
+        self.position = pos
+        self.root.deiconify()
+        self.addPosition(pos[0], pos[1])
+        self.label.config(text="Add click at position: " + self.position.__str__())
+
+    #record
+    def record_click(self, x, y):
+        self.actions.append(("click", x, y))
+
+    def record_key(self, key):
+        self.actions.append(("key", key))
+
+    def perform_actions(self):
+        for action in self.actions:
+            if action[0] == "click":
+                pyautogui.click(action[1], action[2])
+            elif action[0] == "key":
+                pyautogui.write(action[1])
+            time.sleep(0.5)
+
+    def modify_action(self, action_type, *args):
+        for index, action in enumerate(self.actions):
+            if action[0] == action_type:
+                if 0 <= index < len(self.actions):
+                    self.actions[index] = (action_type,) + args
 
     def run(self):
         self.app.mainloop()

@@ -1,16 +1,6 @@
-# This is a sample Python script.
-
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
-
-
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
-
-
-# Press the green button in the gutter to run the script.
-if __name__ == '__main__':
-    print_hi('PyCharm')
-
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+# Open the file in read mode
+with open('E:/Python/AutoImport/inputVoucherTest', 'r') as file:
+    # Iterate through each line in the file
+    for line in file:
+        # Process the line here
+        print(line.strip())  # This will print each line without trailing newline characters
