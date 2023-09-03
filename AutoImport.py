@@ -47,7 +47,7 @@ class MainApp:
     def __init__(self):
         self.app = tk.Tk()
         self.app.title("Auto Import Data")
-        self.app.geometry("800x500")
+        self.app.geometry("800x800")
 
         # Create a frame to hold the left column widgets
         left_frame = tk.Frame(self.app)
@@ -68,10 +68,10 @@ class MainApp:
         title_font = ("Roboto", 16, "bold")
         style = ttk.Style()
         style.configure("Title.TLabel", font=title_font)
-
-        # Set up application icon
-        icon_path = "zoro.ico"
-        self.app.iconbitmap(icon_path)
+        #
+        # # Set up application icon
+        # icon_path = "zoro.ico"
+        # self.app.iconbitmap(icon_path)
 
         # Configure column and row weights for left_frame, right_frame, and text_frame
         self.app.grid_columnconfigure(0, weight=1)
@@ -89,24 +89,44 @@ class MainApp:
         self.count_entry = tk.Entry(left_frame, textvariable=self.count_entry_var)
         self.count_entry.grid(row=1, column=0, padx=1, pady=10, sticky="ew")
 
+        # Add click Data
+        self.setup_file_button = tk.Button(left_frame, text="Add Click", command=self.add_click, bg="yellow", font=button_font)
+        self.setup_file_button.grid(row=2, column=0, padx=10, pady=10, sticky="ew")
+
+        # Add String Data
         self.label_input = tk.Label(left_frame, text="Input File Data:", anchor="w", height=1)
-        self.label_input.grid(row=2, column=0, padx=1, pady=1, sticky="ew")
+        self.label_input.grid(row=3, column=0, padx=1, pady=1, sticky="ew")
 
         self.entry_var = tk.StringVar()
         self.entry = tk.Entry(left_frame, textvariable=self.entry_var)
-        self.entry.grid(row=3, column=0, padx=1, pady=1, sticky="ew")
+        self.entry.grid(row=4, column=0, padx=1, pady=1, sticky="ew")
 
         self.browse_button = tk.Button(left_frame, text="Browse", command=self.browse_file)
-        self.browse_button.grid(row=3, column=1, padx=1, pady=10, sticky="ew")
+        self.browse_button.grid(row=4, column=1, padx=1, pady=10, sticky="ew")
 
         self.setup_action_button = tk.Button(left_frame, text="Add Input", command=self.add_input, bg="yellow", font=button_font)
-        self.setup_action_button.grid(row=4, column=0, padx=10, pady=10, sticky="ew")
+        self.setup_action_button.grid(row=5, column=0, padx=10, pady=10, sticky="ew")
 
-        self.setup_file_button = tk.Button(left_frame, text="Add Click", command=self.add_click, bg="yellow", font=button_font)
-        self.setup_file_button.grid(row=5, column=0, padx=10, pady=10, sticky="ew")
+        # Add keyboard
 
+        self.label_input_key = tk.Label(left_frame, text="Input Key:", anchor="w", height=1)
+        self.label_input_key.grid(row=6, column=0, padx=1, pady=1, sticky="ew")
+
+        self.entry_key_var = tk.StringVar()
+        self.entry_key = tk.Entry(left_frame, textvariable=self.entry_key_var)
+        self.entry_key.grid(row=7, column=0, padx=1, pady=1, sticky="ew")
+
+        self.setup_key_button = tk.Button(left_frame, text="Add Key", command=self.add_key_input, bg="yellow",
+                                             font=button_font)
+        self.setup_key_button.grid(row=8, column=0, padx=10, pady=10, sticky="ew")
+
+        # Start import
         self.start_import_button = tk.Button(left_frame, text="Start Import", command=self.execute_actions, bg="green", font=button_font)
-        self.start_import_button.grid(row=6, column=0, padx=10, pady=10, sticky="ew")
+        self.start_import_button.grid(row=9, column=0, padx=10, pady=10, sticky="ew")
+
+        # Clear import
+        self.clear_import_button = tk.Button(left_frame, text="Clear Import", command=self.clear_actions, bg="red", font=button_font)
+        self.clear_import_button.grid(row=10, column=0, padx=10, pady=10, sticky="ew")
 
         # Right Column (Listbox)
         self.list_box = tk.Listbox(right_frame)
@@ -160,13 +180,18 @@ class MainApp:
     def add_string(self, value):
         self.actions.append(("string", value))
 
+    def add_key(self, value):
+        self.actions.append(("key", value))
+
     def perform_actions(self):
         for action in self.actions:
             if action[0] == "click":
                 pyautogui.click(action[1], action[2])
             elif action[0] == "string":
                 pyautogui.write(action[1])
-            time.sleep(0.01)
+            elif action[0] == "key":
+                keyboard.send(action[1])
+            time.sleep(0.1)
 
     def execute_actions(self):
         self.log("Execute actions...")
@@ -180,13 +205,14 @@ class MainApp:
                     self.modify_string_value_in_action_string("string", line.strip())
                     self.perform_actions()
                     time.sleep(0.5)
+            self.log("Done input from file!!!")
         else:
             count_input = int(self.count_entry_var.get())
-            self.log("Add voucher: " + self.path.__str__())
             for i in range(count_input):
+                self.log("Add voucher: " + self.path.__str__())
                 self.perform_actions()
                 time.sleep(0.5)
-
+            self.log("Done input " + count_input.__str__() + " times from input text box!!!")
         self.app.deiconify()
     def modify_string_value_in_action_string(self, action_type, *args):
         for index, action in enumerate(self.actions):
@@ -194,12 +220,17 @@ class MainApp:
                 if 0 <= index < len(self.actions):
                     self.actions[index] = (action_type,) + args
 
+    def clear_actions(self):
+        self.actions = []
+        self.log("Clear all action...")
+        self.list_box.delete(0, tk.END)
+
     def add_input(self):
         self.count_voucher = 0
         if (self.has_path):
             self.add_file()
             self.add_string("test")
-            self.insert_message("Add string input into textbox!!!")
+            self.insert_message("Add string input into textbox from file!!!")
             self.log("Count voucher:...")
             with open(self.path, 'r') as file:
                 # Iterate through each line in the file
@@ -213,8 +244,13 @@ class MainApp:
             self.path = cached_path
             self.log("No input path???")
             self.add_string(self.path)
-            self.insert_message("Add string input into textbox but default???")
+            self.insert_message("Add string input into textbox: " + self.path.__str__())
             self.log("If continuing, the value in textbox will fill!!!")
+
+    def add_key_input(self):
+        self.add_key(self.entry_key_var.get())
+        self.insert_message("Press key: " + self.entry_key_var.get())
+        self.log("Add key input: " +self.entry_key_var.get())
 
 
     def log_message(self, message):
